@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #050505;
+  --color-surface: #0c0c0c;
+  --color-accent: #24aa4d;
+  --color-primary: #2d0a4e;
+  --color-primary-light: #441770;
+  --color-border: rgba(255, 255, 255, 0.05);
+
+  --font-century: "Century Gothic", "Questrial", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-white antialiased;
+    font-family: var(--font-century);
+  }
+}
+
+@layer components {
+  .premium-card {
+    @apply bg-surface border border-border rounded-xl p-6 shadow-2xl;
+    font-family: var(--font-century);
+  }
+
+  .glass {
+    @apply bg-black/40 backdrop-blur-xl border border-white/5;
+  }
+
+  .nav-header {
+    @apply bg-primary border-b border-primary-light/30 px-6 py-4;
+  }
+
+  .btn-primary {
+    @apply bg-accent text-white font-bold px-4 py-2 rounded-lg transition-all active:scale-95;
+  }
+}
+
+/* Typography Overrides for Mobile-First Design */
+h1 {
+  @apply text-[32px] md:text-[50px] font-black tracking-tight leading-none;
+}
+
+h2 {
+  @apply text-[28px] md:text-[40px] font-black tracking-tight leading-tight;
+}
+
+h3 {
+  @apply text-[24px] md:text-[30px] font-bold tracking-tight;
+}
+
+.sub-1 {
+  @apply text-[18px] md:text-[25px] font-bold;
+}
+
+.sub-2 {
+  @apply text-[16px] md:text-[20px] font-normal;
+}
+
+.sub-3 {
+  @apply text-[15px] font-normal;
+}
+
+.sub-4 {
+  @apply text-[10px] font-normal opacity-60;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(200%);
+  }
+}
+
+.animate-scan {
+  animation: scan 2s linear infinite;
+}
