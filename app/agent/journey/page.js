@@ -404,12 +404,16 @@ export default function JourneyPage() {
   const customerMarkersRef = useRef([]);
   const routeCacheRef = useRef([]);
   const visitedCustomersRef = useRef(new Set());
+  // const OFFICE = {
+  //   lat: 19.1133869510231,
+  //   lng: 72.91810580467191,
+  //   name: "Bargad HQ"
+  // };
   const OFFICE = {
-    lat: 19.1133869510231,
-    lng: 72.91810580467191,
+    lat: 19.221205362778235,
+    lng: 73.09295477236344,
     name: "Bargad HQ"
   };
-
   // Logic remains identical to your provided code
   function haversine_distance(lat1, lng1, lat2, lng2) {
     const R = 6371000;
