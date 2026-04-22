@@ -383,7 +383,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Navigation, Play, Square, ChevronLeft, LocateFixed } from "lucide-react";
+import {
+  MapPin,
+  Navigation,
+  Play,
+  Square,
+  ChevronLeft,
+  LocateFixed,
+} from "lucide-react";
 
 export default function JourneyPage() {
   const router = useRouter();
@@ -407,7 +414,7 @@ export default function JourneyPage() {
   const OFFICE = {
     lat: 19.1133869510231,
     lng: 72.91810580467191,
-    name: "Bargad HQ"
+    name: "Bargad HQ",
   };
   // const OFFICE = {
   //   lat: 19.221205362778235,
@@ -417,11 +424,14 @@ export default function JourneyPage() {
   // Logic remains identical to your provided code
   function haversine_distance(lat1, lng1, lat2, lng2) {
     const R = 6371000;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }
@@ -440,10 +450,10 @@ export default function JourneyPage() {
 
         if (agentFull.journeyTracking?.optimizedRoute?.length > 0) {
           setOptimizedRoute(
-            agentFull.journeyTracking.optimizedRoute.map(p => ({
+            agentFull.journeyTracking.optimizedRoute.map((p) => ({
               lat: p.lat,
-              lng: p.lng
-            }))
+              lng: p.lng,
+            })),
           );
         }
       }
@@ -479,12 +489,12 @@ export default function JourneyPage() {
 
     mapInstance.current.on("load", () => {
       setMapLoaded(true);
-      const el = document.createElement('div');
+      const el = document.createElement("div");
       el.innerHTML = `<div style="background:#ef4444;padding:4px 10px;border-radius:20px;color:white;font-weight:800;font-size:10px;box-shadow:0 4px 10px rgba(0,0,0,0.2);border:2px solid white;">HQ</div>`;
       officeMarkerRef.current = new window.mappls.Marker({
         map: mapInstance.current,
         position: { lat: OFFICE.lat, lng: OFFICE.lng },
-        html: el.innerHTML
+        html: el.innerHTML,
       });
     });
   }, []);
@@ -515,7 +525,8 @@ export default function JourneyPage() {
   //   }
   // }, [mapLoaded, optimizedRoute]);
   useEffect(() => {
-    if (!mapLoaded || !mapInstance.current || optimizedRoute.length === 0) return;
+    if (!mapLoaded || !mapInstance.current || optimizedRoute.length === 0)
+      return;
 
     const map = mapInstance.current;
 
@@ -523,8 +534,8 @@ export default function JourneyPage() {
       type: "Feature",
       geometry: {
         type: "LineString",
-        coordinates: optimizedRoute.map(p => [p.lng, p.lat])
-      }
+        coordinates: optimizedRoute.map((p) => [p.lng, p.lat]),
+      },
     };
 
     const drawRoute = () => {
@@ -536,7 +547,7 @@ export default function JourneyPage() {
       if (!map.getSource("optimized-route")) {
         map.addSource("optimized-route", {
           type: "geojson",
-          data: geojson
+          data: geojson,
         });
       }
 
@@ -546,28 +557,28 @@ export default function JourneyPage() {
         source: "optimized-route",
         layout: {
           "line-join": "round",
-          "line-cap": "round"
+          "line-cap": "round",
         },
         paint: {
           "line-color": "#2563eb",
-          "line-width": 6
-        }
+          "line-width": 6,
+        },
       });
 
       const allPoints = [
         { lat: OFFICE.lat, lng: OFFICE.lng },
-        ...optimizedRoute
+        ...optimizedRoute,
       ];
 
-      const lngs = allPoints.map(p => p.lng);
-      const lats = allPoints.map(p => p.lat);
+      const lngs = allPoints.map((p) => p.lng);
+      const lats = allPoints.map((p) => p.lat);
 
       map.fitBounds(
         [
           [Math.min(...lngs), Math.min(...lats)],
-          [Math.max(...lngs), Math.max(...lats)]
+          [Math.max(...lngs), Math.max(...lats)],
         ],
-        { padding: 60 }
+        { padding: 60 },
       );
     };
 
@@ -576,13 +587,12 @@ export default function JourneyPage() {
     } else {
       map.once("styledata", drawRoute);
     }
-
   }, [mapLoaded, optimizedRoute]);
 
   useEffect(() => {
     if (!mapLoaded || customers.length === 0) return;
     const map = mapInstance.current;
-    customerMarkersRef.current.forEach(marker => marker.remove());
+    customerMarkersRef.current.forEach((marker) => marker.remove());
     customerMarkersRef.current = [];
 
     customers.forEach((customer, index) => {
@@ -594,7 +604,7 @@ export default function JourneyPage() {
       const marker = new window.mappls.Marker({
         map: map,
         position: { lat, lng },
-        html: el.innerHTML
+        html: el.innerHTML,
       });
       customerMarkersRef.current.push(marker);
     });
@@ -674,7 +684,7 @@ export default function JourneyPage() {
     markerRef.current = new window.mappls.Marker({
       map: mapInstance.current,
       position: { lat, lng },
-      html: el.innerHTML
+      html: el.innerHTML,
     });
   };
 
@@ -685,9 +695,16 @@ export default function JourneyPage() {
     }
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const { latitude, longitude } = pos.coords;
-      const distToOffice = haversine_distance(latitude, longitude, OFFICE.lat, OFFICE.lng);
+      const distToOffice = haversine_distance(
+        latitude,
+        longitude,
+        OFFICE.lat,
+        OFFICE.lng,
+      );
       if (distToOffice > 300) {
-        alert(`Access Denied: You are ${(distToOffice / 1000).toFixed(2)} km away. Please reach the office.`);
+        alert(
+          `Access Denied: You are ${(distToOffice / 1000).toFixed(2)} km away. Please reach the office.`,
+        );
         return;
       }
       setCurrentLocation({ lat: latitude, lng: longitude });
@@ -695,7 +712,7 @@ export default function JourneyPage() {
       const res = await fetch(`/api/agents/start-journey/${agent._id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ optimizedRoute: [] })
+        body: JSON.stringify({ optimizedRoute: [] }),
       });
       if (res.ok) {
         setIsTracking(true);
@@ -716,11 +733,10 @@ export default function JourneyPage() {
   //   } catch (err) { console.error(err); }
   // };
   const stopJourney = async () => {
-
     if (currentLocation && mapInstance.current) {
       mapInstance.current.flyTo({
         center: [currentLocation.lng, currentLocation.lat],
-        zoom: 15
+        zoom: 15,
       });
     }
 
@@ -728,14 +744,13 @@ export default function JourneyPage() {
 
     try {
       const res = await fetch(`/api/agents/stop-journey/${agent._id}`, {
-        method: "POST"
+        method: "POST",
       });
 
       if (res.ok) {
         setIsTracking(false);
         if (trackingInterval.current) clearInterval(trackingInterval.current);
       }
-
     } catch (err) {
       console.error(err);
     }
@@ -743,7 +758,10 @@ export default function JourneyPage() {
   const startLocalTracking = (agentId) => {
     if (trackingInterval.current) clearInterval(trackingInterval.current);
     trackCurrentLocation(agentId);
-    trackingInterval.current = setInterval(() => trackCurrentLocation(agentId), 300000);
+    trackingInterval.current = setInterval(
+      () => trackCurrentLocation(agentId),
+      300000,
+    );
   };
 
   // const trackCurrentLocation = (agentId) => {
@@ -770,7 +788,7 @@ export default function JourneyPage() {
         lat,
         lng,
         customer.location.lat,
-        customer.location.lng
+        customer.location.lng,
       );
 
       // Mark as reached on map (80m)
@@ -791,15 +809,18 @@ export default function JourneyPage() {
     if (!nearbyCustomer || !cashAmount) return;
     setIsCollecting(true);
     try {
-      const res = await fetch(`/api/customers/collect-cash/${nearbyCustomer._id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: cashAmount,
-          agentId: agent._id,
-          agentName: agent.name
-        })
-      });
+      const res = await fetch(
+        `/api/customers/collect-cash/${nearbyCustomer._id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: cashAmount,
+            agentId: agent._id,
+            agentName: agent.name,
+          }),
+        },
+      );
       if (res.ok) {
         alert("Cash collected successfully!");
         setNearbyCustomer(null);
@@ -821,11 +842,11 @@ export default function JourneyPage() {
     if (!marker) return;
     const customer = customers[index];
     const isVerified = customer?.verificationStatus === "verified" || reached;
-    
+
     const el = document.createElement("div");
     el.innerHTML = `
       <div style="
-        background:${isVerified ? '#22c55e' : '#10b981'};
+        background:${isVerified ? "#22c55e" : "#10b981"};
         color:white;
         padding:4px 8px;
         border-radius:20px;
@@ -837,12 +858,11 @@ export default function JourneyPage() {
         box-shadow:0 4px 10px rgba(0,0,0,0.2);
         border:2px solid white;
       ">
-        ${isVerified ? '✓' : ''} C${index + 1}
+        ${isVerified ? "✓" : ""} C${index + 1}
       </div>
     `;
     marker.setHTML(el.innerHTML);
   };
-
 
   const trackCurrentLocation = (agentId) => {
     navigator.geolocation.getCurrentPosition(async (pos) => {
@@ -850,7 +870,7 @@ export default function JourneyPage() {
       const newPoint = {
         lat: latitude,
         lng: longitude,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
       routeCacheRef.current.push(newPoint);
       setCurrentLocation({ lat: latitude, lng: longitude });
@@ -860,12 +880,10 @@ export default function JourneyPage() {
       await fetch(`/api/agents/track-location/${agentId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPoint)
+        body: JSON.stringify(newPoint),
       });
     });
   };
-
-
 
   const drawAgentRoute = () => {
     if (!mapInstance.current || routeCacheRef.current.length < 2) return;
@@ -874,8 +892,8 @@ export default function JourneyPage() {
       type: "Feature",
       geometry: {
         type: "LineString",
-        coordinates: routeCacheRef.current.map(p => [p.lng, p.lat])
-      }
+        coordinates: routeCacheRef.current.map((p) => [p.lng, p.lat]),
+      },
     };
     if (map.getSource("agent-route")) {
       map.getSource("agent-route").setData(geojson);
@@ -886,7 +904,7 @@ export default function JourneyPage() {
         type: "line",
         source: "agent-route",
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#facc15", "line-width": 5 }
+        paint: { "line-color": "#facc15", "line-width": 5 },
       });
     }
   };
@@ -902,11 +920,16 @@ export default function JourneyPage() {
     <div className="fixed inset-0 bg-gray-100 flex flex-col font-sans overflow-hidden">
       {/* Header: Optimized for Mobile Status Bars */}
       <header className="px-5 pt-6 pb-6 bg-[#2d0060] text-white shadow-xl flex items-center gap-4 z-20">
-        <button onClick={() => router.back()} className="p-2 bg-white/10 active:bg-white/20 rounded-xl transition-all">
+        <button
+          onClick={() => router.back()}
+          className="p-2 bg-white/10 active:bg-white/20 rounded-xl transition-all"
+        >
           <ChevronLeft size={24} />
         </button>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Journey Portal</p>
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-60">
+            Journey Portal
+          </p>
           <div className="text-xl md:text-2xl lg:text-3xl   font-black tracking-tight">
             {isTracking ? "Tracking Live" : "Start Your Journey"}
           </div>
@@ -938,7 +961,9 @@ export default function JourneyPage() {
               {isTracking ? (
                 <motion.div
                   key="tracking"
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   className="flex items-center justify-between mb-5"
                 >
                   <div className="flex items-center gap-3">
@@ -948,22 +973,32 @@ export default function JourneyPage() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-emerald-600 uppercase tracking-tighter">GPS Active</p>
-                      <p className="text-sm font-black text-gray-800">Recording Movement</p>
+                      <p className="text-xs font-bold text-emerald-600 uppercase tracking-tighter">
+                        GPS Active
+                      </p>
+                      <p className="text-sm font-black text-gray-800">
+                        Recording Movement
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase">Updates</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">
+                      Updates
+                    </p>
                     <p className="text-xs font-black text-gray-600">Every 5m</p>
                   </div>
                 </motion.div>
               ) : (
                 <motion.div
                   key="idle"
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   className="mb-5 text-center"
                 >
-                  <p className="text-sm font-bold text-gray-500">You must be within 300m of HQ to start.</p>
+                  <p className="text-sm font-bold text-gray-500">
+                    You must be within 300m of HQ to start.
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -979,8 +1014,12 @@ export default function JourneyPage() {
                 >
                   <div className="flex justify-between items-center mb-3">
                     <div>
-                      <p className="text-[10px] font-bold text-emerald-600 uppercase">Customer Reached</p>
-                      <h4 className="text-sm font-black text-gray-900">{nearbyCustomer.name}</h4>
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase">
+                        Customer Reached
+                      </p>
+                      <h4 className="text-sm font-black text-gray-900">
+                        {nearbyCustomer.name}
+                      </h4>
                     </div>
                     <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white">
                       <MapPin size={16} />
@@ -1005,7 +1044,6 @@ export default function JourneyPage() {
                 </motion.div>
               )}
             </AnimatePresence>
-
 
             <div className="flex gap-3">
               {!isTracking ? (
