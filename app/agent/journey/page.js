@@ -1,384 +1,3 @@
-// "use client";
-// import { useState, useEffect, useRef } from "react";
-// import { useRouter } from "next/navigation";
-// import { motion } from "framer-motion";
-// import { MapPin, Navigation, Play, Square, ChevronLeft } from "lucide-react";
-
-// export default function JourneyPage() {
-//   const router = useRouter();
-//   const [agent, setAgent] = useState(null);
-//   const [isTracking, setIsTracking] = useState(false);
-//   const [currentLocation, setCurrentLocation] = useState(null);
-//   const [optimizedRoute, setOptimizedRoute] = useState([]);
-//   const [mapLoaded, setMapLoaded] = useState(false);
-//   const [customers, setCustomers] = useState([]);
-//   const mapInstance = useRef(null);
-//   const markerRef = useRef(null);
-//   const officeMarkerRef = useRef(null);
-//   const trackingInterval = useRef(null);
-//   const customerMarkersRef = useRef([]);
-//   const routeCacheRef = useRef([]);
-//   const OFFICE = {
-//     lat: 19.1133869510231,
-//     lng: 72.91810580467191,
-//     name: "Bargad HQ"
-//   };
-
-//   function haversine_distance(lat1, lng1, lat2, lng2) {
-//     const R = 6371000;
-//     const dLat = (lat2 - lat1) * Math.PI / 180;
-//     const dLng = (lng2 - lng1) * Math.PI / 180;
-//     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-//       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-//       Math.sin(dLng / 2) * Math.sin(dLng / 2);
-//     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-//     return R * c;
-//   }
-
-//   const fetchAgentData = async (agentId) => {
-//     try {
-//       const res = await fetch(`/api/agents/${agentId}`);
-//       if (res.ok) {
-//         const data = await res.json();
-//         const agentFull = data.data;
-//         setCustomers(agentFull.customers || []);
-//         if (agentFull.journeyTracking?.isActive) {
-//           setIsTracking(true);
-//           startLocalTracking(agentId);
-//         }
-//         if (agentFull.journeyTracking?.optimizedRoute) {
-//           setOptimizedRoute(agentFull.journeyTracking.optimizedRoute);
-//         }
-//       }
-//     } catch (err) {
-//       console.error("Failed to fetch agent data", err);
-//     }
-//   };
-
-//   useEffect(() => {
-//     const savedAgent = localStorage.getItem("agent");
-//     if (!savedAgent) {
-//       router.push("/");
-//       return;
-//     }
-//     const agentData = JSON.parse(savedAgent);
-//     setAgent(agentData);
-//     fetchAgentData(agentData._id);
-
-//     return () => {
-//       if (trackingInterval.current) clearInterval(trackingInterval.current);
-//     };
-//   }, []);
-
-//   useEffect(() => {
-//     if (!window.mappls || mapInstance.current) return;
-
-//     mapInstance.current = new window.mappls.Map("agent-map", {
-//       center: [OFFICE.lat, OFFICE.lng],
-//       zoom: 12,
-//       zoomControl: true,
-//       hybrid: true,
-//     });
-
-//     mapInstance.current.on("load", () => {
-//       setMapLoaded(true);
-//       const el = document.createElement('div');
-//       el.innerHTML = `<div style="background:#ef4444;padding:4px 8px;border-radius:4px;color:white;font-weight:700;font-size:10px;white-space:nowrap;box-shadow:0 2px 5px rgba(0,0,0,0.3);">OFFICE</div>`;
-//       officeMarkerRef.current = new window.mappls.Marker({
-//         map: mapInstance.current,
-//         position: { lat: OFFICE.lat, lng: OFFICE.lng },
-//         html: el.innerHTML
-//       });
-//     });
-//   }, []);
-
-//   useEffect(() => {
-//     if (mapLoaded && optimizedRoute.length > 0) {
-//       const map = mapInstance.current;
-//       const geojson = {
-//         type: "Feature",
-//         geometry: {
-//           type: "LineString",
-//           coordinates: optimizedRoute.map((p) => [p.lng, p.lat])
-//         },
-//       };
-
-//       if (map.getSource("route")) {
-//         map.getSource("route").setData(geojson);
-//       } else {
-//         map.addSource("route", { type: "geojson", data: geojson });
-//         map.addLayer({
-//           id: "route",
-//           type: "line",
-//           source: "route",
-//           layout: { "line-join": "round", "line-cap": "round" },
-//           paint: { "line-color": "#3b82f6", "line-width": 5 },
-//         });
-//       }
-
-//       const points = [...optimizedRoute, { lat: OFFICE.lat, lng: OFFICE.lng }];
-//       const lngs = points.map(p => p.lng);
-//       const lats = points.map(p => p.lat);
-//       map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: 50 });
-//     }
-//   }, [mapLoaded, optimizedRoute]);
-
-//   // add new line
-//   useEffect(() => {
-//     if (!mapLoaded || customers.length === 0) return;
-
-//     const map = mapInstance.current;
-
-//     // remove old markers
-//     customerMarkersRef.current.forEach(marker => marker.remove());
-//     customerMarkersRef.current = [];
-
-//     customers.forEach((customer, index) => {
-//       if (!customer.location) return;
-
-//       const { lat, lng } = customer.location;
-
-//       const el = document.createElement("div");
-//       el.innerHTML = `
-//       <div style="
-//         background:#10b981;
-//         color:white;
-//         padding:4px 6px;
-//         border-radius:6px;
-//         font-size:10px;
-//         font-weight:700;
-//         box-shadow:0 2px 5px rgba(0,0,0,0.3);
-//       ">
-//         C${index + 1}
-//       </div>
-//     `;
-
-//       const marker = new window.mappls.Marker({
-//         map: map,
-//         position: { lat, lng },
-//         html: el.innerHTML
-//       });
-
-//       customerMarkersRef.current.push(marker);
-//     });
-
-//   }, [customers, mapLoaded]);
-
-//   const updateMapMarker = (lat, lng) => {
-//     if (!mapLoaded || !mapInstance.current) return;
-//     if (markerRef.current) {
-//       markerRef.current.setPosition({ lat, lng });
-//     } else {
-//       const el = document.createElement('div');
-//       el.innerHTML = `
-//         <div style="width:28px;height:28px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 0 15px rgba(59, 130, 246, 0.6);display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:bold;animation: pulse 2s infinite;">
-//           A
-//         </div>
-//         <style>
-//           @keyframes pulse {
-//             0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-//             70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-//             100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-//           }
-//         </style>
-//       `;
-//       markerRef.current = new window.mappls.Marker({
-//         map: mapInstance.current,
-//         position: { lat: lng, lng: lat }, // Note: Library might expect {lat, lng} or [lng, lat]
-//         html: el.innerHTML
-//       });
-//       // Correcting the object property
-//       markerRef.current.setPosition({ lat, lng });
-//     }
-//   };
-
-//   const startJourney = async () => {
-//     if (!navigator.geolocation) {
-//       alert("Geolocation is not supported by your browser");
-//       return;
-//     }
-//     try {
-//       navigator.geolocation.getCurrentPosition(async (pos) => {
-//         const { latitude, longitude } = pos.coords;
-//         const distToOffice = haversine_distance(latitude, longitude, OFFICE.lat, OFFICE.lng);
-//         if (distToOffice > 300) {
-//           alert(`Error: You must be at the Office to start your journey. Current distance: ${(distToOffice / 1000).toFixed(2)} km`);
-//           return;
-//         }
-//         setCurrentLocation({ lat: latitude, lng: longitude });
-//         updateMapMarker(latitude, longitude);
-//         const res = await fetch(`/api/agents/start-journey/${agent._id}`, {
-//           method: "POST",
-//           headers: { "Content-Type": "application/json" },
-//           body: JSON.stringify({ optimizedRoute: [] })
-//         });
-//         if (res.ok) {
-//           setIsTracking(true);
-//           startLocalTracking(agent._id);
-//         }
-//       }, (err) => {
-//         alert("Please allow location access to start journey");
-//       });
-//     } catch (err) {
-//       console.error(err);
-//     }
-//   };
-
-//   const stopJourney = async () => {
-//     try {
-//       const res = await fetch(`/api/agents/stop-journey/${agent._id}`, {
-//         method: "POST"
-//       });
-//       if (res.ok) {
-//         setIsTracking(false);
-//         if (trackingInterval.current) clearInterval(trackingInterval.current);
-//       }
-//     } catch (err) {
-//       console.error(err);
-//     }
-//   };
-
-//   const startLocalTracking = (agentId) => {
-//     if (trackingInterval.current) clearInterval(trackingInterval.current);
-//     trackCurrentLocation(agentId);
-//     trackingInterval.current = setInterval(() => {
-//       trackCurrentLocation(agentId);
-//     }, 300000);
-//   };
-
-//   // const trackCurrentLocation = (agentId) => {
-//   //   navigator.geolocation.getCurrentPosition(async (pos) => {
-//   //     const { latitude, longitude } = pos.coords;
-//   //     setCurrentLocation({ lat: latitude, lng: longitude });
-//   //     updateMapMarker(latitude, longitude);
-//   //     await fetch(`/api/agents/track-location/${agentId}`, {
-//   //       method: "POST",
-//   //       headers: { "Content-Type": "application/json" },
-//   //       body: JSON.stringify({ lat: latitude, lng: longitude })
-//   //     });
-//   //   });
-//   // };
-//   const trackCurrentLocation = (agentId) => {
-//     navigator.geolocation.getCurrentPosition(async (pos) => {
-//       const { latitude, longitude } = pos.coords;
-
-//       const newPoint = {
-//         lat: latitude,
-//         lng: longitude,
-//         timestamp: new Date()
-//       };
-
-//       // Save to frontend cache
-//       routeCacheRef.current.push(newPoint);
-
-//       setCurrentLocation({ lat: latitude, lng: longitude });
-//       updateMapMarker(latitude, longitude);
-
-//       drawAgentRoute();
-
-//       await fetch(`/api/agents/track-location/${agentId}`, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify(newPoint)
-//       });
-
-//     });
-//   };
-
-//   const drawAgentRoute = () => {
-//     if (!mapInstance.current || routeCacheRef.current.length < 2) return;
-
-//     const map = mapInstance.current;
-
-//     const geojson = {
-//       type: "Feature",
-//       geometry: {
-//         type: "LineString",
-//         coordinates: routeCacheRef.current.map(p => [p.lng, p.lat])
-//       }
-//     };
-
-//     if (map.getSource("agent-route")) {
-//       map.getSource("agent-route").setData(geojson);
-//     } else {
-//       map.addSource("agent-route", {
-//         type: "geojson",
-//         data: geojson
-//       });
-
-//       map.addLayer({
-//         id: "agent-route",
-//         type: "line",
-//         source: "agent-route",
-//         layout: {
-//           "line-join": "round",
-//           "line-cap": "round"
-//         },
-//         paint: {
-//           "line-color": "#facc15",
-//           "line-width": 5
-//         }
-//       });
-//     }
-//   };
-//   return (
-//     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-//       <header className="px-6 py-3 bg-[#2d0060] text-white shadow-lg flex items-center gap-4">
-//         <button onClick={() => router.back()} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-//           <ChevronLeft size={24} />
-//         </button>
-//         <div>
-//           <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-70">Journey Tracking</p>
-//           <h3 className="text-base font-bold tracking-tight">{isTracking ? "Journey in Progress" : "Start Your Journey"}</h3>
-//         </div>
-//       </header>
-
-//       <main className="flex-1 flex flex-col relative">
-//         <div id="agent-map" className="flex-1 w-full h-full bg-gray-200" />
-//         <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-//           <motion.div
-//             initial={{ y: 100 }}
-//             animate={{ y: 0 }}
-//             className="bg-white rounded-3xl shadow-2xl p-4 border border-gray-100"
-//           >
-//             {currentLocation && (
-//               <div className="flex items-center gap-4 mb-4 p-2 bg-emerald-50 rounded-2xl border border-emerald-100">
-//                 <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white">
-//                   <Navigation size={20} className="animate-pulse" />
-//                 </div>
-//                 <div>
-//                   <p className="text-[10px] font-bold text-emerald-600 uppercase">Live Location</p>
-//                   <p className="text-sm font-black text-gray-900">Active Tracking</p>
-//                 </div>
-//               </div>
-//             )}
-//             {!isTracking ? (
-//               <button
-//                 onClick={startJourney}
-//                 className="w-full py-3 rounded-2xl bg-[#2d0060] text-white font-black text-sm uppercase tracking-[0.2em] shadow-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-all"
-//               >
-//                 <Play size={20} fill="currentColor" />
-//                 Start Journey
-//               </button>
-//             ) : (
-//               <button
-//                 onClick={stopJourney}
-//                 className="w-full py-5 rounded-2xl bg-red-600 text-white font-black text-sm uppercase tracking-[0.2em] shadow-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-all"
-//               >
-//                 <Square size={20} fill="currentColor" />
-//                 Stop Journey
-//               </button>
-//             )}
-//             <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-4">
-//               {isTracking ? "Automatically syncing every 10 minutes" : "Ready to optimize your field route?"}
-//             </p>
-//           </motion.div>
-//         </div>
-//       </main>
-//     </div>
-//   );
-// }
-
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -478,52 +97,43 @@ export default function JourneyPage() {
   }, []);
 
   useEffect(() => {
-    if (!window.mappls || mapInstance.current) return;
+    let timer;
+    const initMap = () => {
+      if (!window.mappls || mapInstance.current) return;
 
-    mapInstance.current = new window.mappls.Map("agent-map", {
-      center: [OFFICE.lat, OFFICE.lng],
-      zoom: 14, // Slightly tighter zoom for mobile
-      zoomControl: false, // Cleaner UI, use gestures
-      hybrid: true,
-    });
-
-    mapInstance.current.on("load", () => {
-      setMapLoaded(true);
-      const el = document.createElement("div");
-      el.innerHTML = `<div style="background:#ef4444;padding:4px 10px;border-radius:20px;color:white;font-weight:800;font-size:10px;box-shadow:0 4px 10px rgba(0,0,0,0.2);border:2px solid white;">HQ</div>`;
-      officeMarkerRef.current = new window.mappls.Marker({
-        map: mapInstance.current,
-        position: { lat: OFFICE.lat, lng: OFFICE.lng },
-        html: el.innerHTML,
+      mapInstance.current = new window.mappls.Map("agent-map", {
+        center: [OFFICE.lng, OFFICE.lat],
+        zoom: 14,
+        zoomControl: false,
+        hybrid: true,
       });
-    });
+
+      mapInstance.current.on("load", () => {
+        setMapLoaded(true);
+        const el = document.createElement("div");
+        el.innerHTML = `<div style="background:#ef4444;padding:4px 10px;border-radius:20px;color:white;font-weight:800;font-size:10px;box-shadow:0 4px 10px rgba(0,0,0,0.2);border:2px solid white;">HQ</div>`;
+        officeMarkerRef.current = new window.mappls.Marker({
+          map: mapInstance.current,
+          position: { lat: OFFICE.lat, lng: OFFICE.lng },
+          html: el.innerHTML,
+        });
+      });
+    };
+
+    if (window.mappls) {
+      initMap();
+    } else {
+      timer = setInterval(() => {
+        if (window.mappls) {
+          initMap();
+          clearInterval(timer);
+        }
+      }, 500);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, []);
-
-  // useEffect(() => {
-  //   if (mapLoaded && optimizedRoute.length > 0) {
-  //     const map = mapInstance.current;
-  //     const geojson = {
-  //       type: "Feature",
-  //       geometry: {
-  //         type: "LineString",
-  //         coordinates: optimizedRoute.map((p) => [p.lng, p.lat])
-  //       },
-  //     };
-
-  //     if (map.getSource("route")) {
-  //       map.getSource("route").setData(geojson);
-  //     } else {
-  //       map.addSource("route", { type: "geojson", data: geojson });
-  //       map.addLayer({
-  //         id: "route",
-  //         type: "line",
-  //         source: "route",
-  //         layout: { "line-join": "round", "line-cap": "round" },
-  //         paint: { "line-color": "#3b82f6", "line-width": 6 },
-  //       });
-  //     }
-  //   }
-  // }, [mapLoaded, optimizedRoute]);
   useEffect(() => {
     if (!mapLoaded || !mapInstance.current || optimizedRoute.length === 0)
       return;
