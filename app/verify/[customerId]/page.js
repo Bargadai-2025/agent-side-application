@@ -355,18 +355,27 @@ export default function VerifyPage() {
     setLoading(true);
     setStatusMessage("Analyzing Frame...");
 
+    // Capture at reduced resolution for faster network transfer
+    const MAX_SIZE = 640;
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    const scale = Math.min(MAX_SIZE / vw, MAX_SIZE / vh, 1);
+    const cw = Math.round(vw * scale);
+    const ch = Math.round(vh * scale);
+
     const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width = cw;
+    canvas.height = ch;
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0);
-    const b64 = canvas.toDataURL("image/jpeg", 0.85);
+    ctx.drawImage(video, 0, 0, cw, ch);
+    const b64 = canvas.toDataURL("image/jpeg", 0.7);
     setCapturedImage(b64);
 
     setStep("results");
     stopCamera();
 
-    console.log("📤 Sending face verification to backend...");
+    console.log(`📤 Sending face verification (${cw}x${ch}, ~${Math.round(b64.length / 1024)}KB)...`);
+    const startTime = Date.now();
     
     try {
       // Call backend API for server-side face verification
@@ -379,8 +388,26 @@ export default function VerifyPage() {
         }),
       });
 
-      const verificationResult = await verificationResponse.json();
-      console.log("📥 Backend verification response:", verificationResult);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      
+      // Safely parse response - backend may return non-JSON on errors
+      let verificationResult;
+      const responseText = await verificationResponse.text();
+      try {
+        verificationResult = JSON.parse(responseText);
+      } catch (parseErr) {
+        console.error("❌ Backend returned non-JSON:", responseText.substring(0, 200));
+        toast.error(`Server Error (${elapsed}s). Please retry.`);
+        setCustomer((prev) => ({
+          ...prev,
+          currentScore: 0,
+          isMatch: false,
+        }));
+        setLoading(false);
+        return;
+      }
+      
+      console.log(`📥 Backend response in ${elapsed}s:`, verificationResult);
 
       if (!verificationResponse.ok) {
         const errorMsg = verificationResult.msg || verificationResult.detail || "Verification failed";
@@ -396,17 +423,20 @@ export default function VerifyPage() {
       }
 
       // Check if face verification passed
-      const { isVerified, score, distance } = verificationResult.data;
-      console.log(`🎯 Verification Result - Verified: ${isVerified}, Score: ${score}%, Distance: ${distance}`);
+      const { isVerified, score, similarity } = verificationResult.data;
+      console.log(`🎯 Verification Result - Verified: ${isVerified}, Score: ${score}%, Similarity: ${similarity}`);
 
-      if (isVerified) {
+      // Score >= 65 = verified (green toast)
+      const passed = isVerified || score >= 65;
+
+      if (passed) {
         console.log("✅ Face matched! User verified.");
         setCustomer((prev) => ({
           ...prev,
           currentScore: score,
           isMatch: true,
         }));
-        toast.success("✓ Face Verified Successfully!");
+        toast.success(`✓ Face Verified! Score: ${score}% (${elapsed}s)`);
       } else {
         console.log("❌ Face does not match the reference image.");
         setCustomer((prev) => ({
@@ -414,7 +444,7 @@ export default function VerifyPage() {
           currentScore: score,
           isMatch: false,
         }));
-        toast.error("Face does not match. Please try again.");
+        toast.error(`Verification Failed. Score: ${score}% (need 65%)`);
         setLoading(false);
         return;
       }
@@ -461,7 +491,7 @@ export default function VerifyPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }; 
 
   if (!mounted) return null;
 
@@ -642,16 +672,18 @@ export default function VerifyPage() {
             >
               <div className="bg-white rounded-2xl shadow-lg border border-[#2d0060]/10 p-10 text-center">
                 <div
-                  className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-8 bg-gradient-to-br shadow-inner ${customer?.isMatch ? "from-[#2d0060]/10 to-[#2d0060]/5 text-[#2d0060]" : "from-red-50 to-red-100 text-red-600"}`}
+                  className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-8 bg-gradient-to-br shadow-inner ${customer?.isMatch ? "from-emerald-50 to-emerald-100 text-emerald-600" : loading ? "from-gray-50 to-gray-100 text-gray-400" : "from-red-50 to-red-100 text-red-600"}`}
                 >
-                  {customer?.isMatch ? (
+                  {loading ? (
+                    <RefreshCw size={48} className="animate-spin" />
+                  ) : customer?.isMatch ? (
                     <ShieldCheck size={48} />
                   ) : (
                     <ShieldAlert size={48} />
                   )}
                 </div>
                 <h2 className="text-2xl font-black mb-1 leading-none tracking-tighter">
-                  {customer?.isMatch ? "AUTHENTICATED." : "UNAUTHORIZED."}
+                  {loading ? "VERIFYING..." : customer?.isMatch ? "AUTHENTICATED." : "FAILED."}
                 </h2>
                 <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] mb-10">
                   Confidence Range: {customer?.currentScore || 0}%
