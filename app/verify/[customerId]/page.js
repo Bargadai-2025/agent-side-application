@@ -30,47 +30,47 @@ const LIVENESS_TASKS = [
       return leftDist / rightDist < 0.65;
     },
   },
-  {
-    id: "look_right",
-    label: "Head Right",
-    instruction: "Slowly turn your head to the RIGHT",
-    check: (landmarks) => {
-      if (!landmarks) return false;
-      const nose = landmarks.getNose()[3];
-      const leftJaw = landmarks.getJawOutline()[0];
-      const rightJaw = landmarks.getJawOutline()[16];
-      const leftDist = nose.x - leftJaw.x;
-      const rightDist = rightJaw.x - nose.x;
-      // Nose moves significantly towards the right jaw relative to left jaw
-      return rightDist / leftDist < 0.65;
-    },
-  },
-  {
-    id: "smile",
-    label: "Smile",
-    instruction: "Show a natural smile",
-    check: (landmarks) => {
-      if (!landmarks) return false;
-      const mouth = landmarks.getMouth();
-      const jaw = landmarks.getJawOutline();
-      const mouthWidth = mouth[6].x - mouth[0].x;
-      const faceWidth = jaw[16].x - jaw[0].x;
-      return mouthWidth / faceWidth > 0.44;
-    },
-  },
-  {
-    id: "open_mouth",
-    label: "Final Check",
-    instruction: "Open your mouth slightly",
-    check: (landmarks) => {
-      if (!landmarks) return false;
-      const mouth = landmarks.getMouth();
-      const leftEye = landmarks.getLeftEye();
-      const gap = mouth[18].y - mouth[14].y;
-      const faceHeight = mouth[18].y - leftEye[0].y;
-      return gap / faceHeight > 0.14;
-    },
-  },
+  // {
+  //   id: "look_right",
+  //   label: "Head Right",
+  //   instruction: "Slowly turn your head to the RIGHT",
+  //   check: (landmarks) => {
+  //     if (!landmarks) return false;
+  //     const nose = landmarks.getNose()[3];
+  //     const leftJaw = landmarks.getJawOutline()[0];
+  //     const rightJaw = landmarks.getJawOutline()[16];
+  //     const leftDist = nose.x - leftJaw.x;
+  //     const rightDist = rightJaw.x - nose.x;
+  //     // Nose moves significantly towards the right jaw relative to left jaw
+  //     return rightDist / leftDist < 0.65;
+  //   },
+  // },
+  // {
+  //   id: "smile",
+  //   label: "Smile",
+  //   instruction: "Show a natural smile",
+  //   check: (landmarks) => {
+  //     if (!landmarks) return false;
+  //     const mouth = landmarks.getMouth();
+  //     const jaw = landmarks.getJawOutline();
+  //     const mouthWidth = mouth[6].x - mouth[0].x;
+  //     const faceWidth = jaw[16].x - jaw[0].x;
+  //     return mouthWidth / faceWidth > 0.44;
+  //   },
+  // },
+  // {
+  //   id: "open_mouth",
+  //   label: "Final Check",
+  //   instruction: "Open your mouth slightly",
+  //   check: (landmarks) => {
+  //     if (!landmarks) return false;
+  //     const mouth = landmarks.getMouth();
+  //     const leftEye = landmarks.getLeftEye();
+  //     const gap = mouth[18].y - mouth[14].y;
+  //     const faceHeight = mouth[18].y - leftEye[0].y;
+  //     return gap / faceHeight > 0.14;
+  //   },
+  // },
 ];
 
 export default function VerifyPage() {

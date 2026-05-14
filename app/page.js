@@ -371,11 +371,11 @@ export default function LoanSearchPage() {
                 </div>
               </div>
 
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3 pt-2 flex items-center justify-around">
                 {!currentCustomer.verifiedAgentImage && (
                   <button
                     onClick={startVerification}
-                    className="w-full py-5 rounded-2xl bg-[#2d0060] text-white font-black text-xs uppercase tracking-[0.2em] shadow-lg flex items-center justify-center gap-3 active:scale-[0.98]"
+                    className="w-fit px-5 py-5 mx-auto rounded-4xl bg-[#2d0060] text-white font-black text-xs uppercase tracking-[0.2em] shadow-lg flex items-center justify-center gap-3 active:scale-[0.98]"
                     suppressHydrationWarning
                   >
                     <User size={18} />
@@ -385,21 +385,14 @@ export default function LoanSearchPage() {
 
                 <button
                   onClick={() => router.push('/agent/journey')}
-                  className="w-full py-5 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-[0.2em] shadow-lg flex items-center justify-center gap-3 active:scale-[0.98]"
+                  className="w-fit px-5 py-5 mx-auto rounded-4xl bg-emerald-600 text-white font-black text-xs uppercase tracking-[0.2em] shadow-lg flex items-center justify-center gap-3 active:scale-[0.98]"
                   suppressHydrationWarning
                 >
                   <MapPin size={18} />
                   Track My Journey
                 </button>
 
-                <button
-                  onClick={openNavigation}
-                  className="w-full py-5 rounded-2xl bg-white border-2 border-[#2d0060] text-[#2d0060] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-[0.98]"
-                  suppressHydrationWarning
-                >
-                  <Navigation size={18} />
-                  Navigate to Location
-                </button>
+               
               </div>
             </div>
           </div>

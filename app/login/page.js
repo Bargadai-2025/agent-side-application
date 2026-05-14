@@ -123,7 +123,7 @@ export default function LoginPage() {
                                             <div className="w-full h-full bg-gray-100 flex items-center justify-center text-3xl font-black text-gray-300">
                                                 {matchedContext.agent.name?.[0]}
                                             </div>
-                                        )}
+                                        )} 
                                     </div>
                                     <h2 className="text-xl font-black text-gray-900 leading-tight">{matchedContext.agent.name}</h2>
                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Authorized Specialist</p>
